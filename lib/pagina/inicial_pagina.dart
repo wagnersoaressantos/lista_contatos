@@ -17,7 +17,7 @@ class _InicialPaginaState extends State<InicialPagina> {
         appBarTheme: AppBarTheme(backgroundColor: Colors.green[100]),
         colorScheme: ColorScheme.fromSwatch(
           primarySwatch: Colors.cyan,
-          accentColor: Colors.blue[300],
+          accentColor: Colors.black,
         ),
       ),
       home: MenuPagina(),
