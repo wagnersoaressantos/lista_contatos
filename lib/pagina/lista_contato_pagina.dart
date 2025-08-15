@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:lista_contatos/modelo/contato_modelo.dart';
 import 'package:lista_contatos/repositorio/contato_repositorio.dart';
@@ -19,7 +21,7 @@ class _ListaContatoPaginaState extends State<ListaContatoPagina> {
     carregarContatos();
   }
 
-  carregarContatos() async {
+  Future<void> carregarContatos() async {
     listaContato = await contatoRepositorio.listaContato();
     setState(() {});
   }
@@ -58,7 +60,15 @@ class _ListaContatoPaginaState extends State<ListaContatoPagina> {
                           children: [
                             Expanded(
                               flex: 1,
-                              child: CircleAvatar(child: Icon(Icons.person)),
+                              child: CircleAvatar(
+                                radius: 80,
+                                backgroundImage: contato.localImagem.isNotEmpty
+                                    ? FileImage(File(contato.localImagem))
+                                    : null,
+                                child: contato.localImagem.isEmpty
+                                    ? Icon(Icons.person)
+                                    : null,
+                              ),
                             ),
                             Expanded(
                               flex: 2,

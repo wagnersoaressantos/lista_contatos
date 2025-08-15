@@ -1,9 +1,14 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:lista_contatos/modelo/contato_modelo.dart';
 import 'package:lista_contatos/repositorio/contato_repositorio.dart';
 import 'package:lista_contatos/servicos/data_input_mascara.dart';
 import 'package:lista_contatos/servicos/telefone_input_mascara.dart';
+import 'package:path_provider/path_provider.dart' as path_provider;
+import 'package:path/path.dart';
 
 class CriarContatoPagina extends StatefulWidget {
   final String? objectoId;
@@ -20,6 +25,7 @@ class _CriarContatoPaginaState extends State<CriarContatoPagina> {
   TextEditingController telefoneController = TextEditingController();
   bool carregando = false;
   bool editando = false;
+  String? caminhoImagem;
 
   @override
   void initState() {
@@ -30,7 +36,7 @@ class _CriarContatoPaginaState extends State<CriarContatoPagina> {
     }
   }
 
-  carregarContato(id) async {
+  Future<void> carregarContato(id) async {
     setState(() {
       carregando = true;
     });
@@ -66,18 +72,27 @@ class _CriarContatoPaginaState extends State<CriarContatoPagina> {
                         return Wrap(
                           children: [
                             ListTile(
-                              onTap: () {
+                              onTap: () async {
                                 Navigator.pop(context);
+                                final ImagePicker picker = ImagePicker();
+                                final XFile? photo = await picker.pickImage(
+                                  source: ImageSource.camera,
+                                );
+                                if (photo != null) {
+                                  String path =
+                                      (await path_provider
+                                              .getApplicationDocumentsDirectory())
+                                          .path;
+                                  String nome = basename(photo.path);
+                                  var caminho = "$path/$nome";
+                                  await photo.saveTo("$path/$nome");
+                                  setState(() {
+                                    caminhoImagem = caminho;
+                                  });
+                                }
                               },
                               title: const Text("Camera"),
                               leading: const Icon(Icons.camera_alt),
-                            ),
-                            ListTile(
-                              onTap: () {
-                                Navigator.pop(context);
-                              },
-                              title: const Text("Galeria"),
-                              leading: const Icon(Icons.insert_photo),
                             ),
                           ],
                         );
@@ -88,9 +103,16 @@ class _CriarContatoPaginaState extends State<CriarContatoPagina> {
                     maxRadius: 40,
                     minRadius: 40,
                     backgroundColor: Colors.white,
-                    child: Image.network(
-                      "https://hermes.digitalinnovation.one/assets/diome/logo.png",
-                    ),
+                    child: caminhoImagem != null
+                        ? ClipOval(
+                            child: Image.file(
+                              File(caminhoImagem!),
+                              fit: BoxFit.cover,
+                              width: 80,
+                              height: 80,
+                            ),
+                          )
+                        : Icon(Icons.person),
                   ),
                 ),
                 TextField(
@@ -131,12 +153,11 @@ class _CriarContatoPaginaState extends State<CriarContatoPagina> {
                 SizedBox(height: 18),
                 ElevatedButton(
                   onPressed: () async {
-                    String localImagem = "past/teste.png";
+                    String localImagem = caminhoImagem ?? "Erro no arquivo";
 
                     if (nomeController.text.isEmpty ||
                         telefoneController.text.isEmpty ||
                         dataController.text.isEmpty) {
-                      print("Preencha todos os campos!");
                       return;
                     }
 
@@ -148,6 +169,7 @@ class _CriarContatoPaginaState extends State<CriarContatoPagina> {
                         dataController.text,
                       ),
                     );
+                    Navigator.pop(context);
                   },
                   child: Text("Salvar contato"),
                 ),
